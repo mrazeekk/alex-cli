@@ -29,7 +29,7 @@ Diving deep into systemd units to explain why a service isn't behaving.
 
 ```bash
 sudo apt update && sudo apt install -y git && \
-sudo git clone [https://github.com/mrazeekk/alex-cli.git](https://github.com/mrazeekk/alex-cli.git) /opt/alex && \
+sudo git clone https://github.com/mrazeekk/alex-cli.git /opt/alex && \
 sudo /opt/alex/scripts/install.sh
 ```
 After installation, restart your terminal or run source /etc/profile.d/alex-shell-hook.sh.
