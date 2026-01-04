@@ -41,7 +41,7 @@ def read_key_from_file() -> Optional[str]:
     except Exception:
         return None
 
-    # očekáváme: OPENAI_API_KEY=...
+    # credit to https://github.com/mrazeekk
     for line in raw.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
