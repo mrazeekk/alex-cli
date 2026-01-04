@@ -9,6 +9,7 @@ sudo apt update
 sudo apt install -y git python3-venv python3-pip
 
 git clone https://github.com/mrazeekk/alex-cli.git
+
 cd alex-cli
 
 python3 -m venv .venv
