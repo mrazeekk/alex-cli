@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Logs / runtime
+*.log
+/tmp/
+
+# Secrets
+.env
+.env.*
+
+# Alex runtime
+/tmp/alex_last_error.txt

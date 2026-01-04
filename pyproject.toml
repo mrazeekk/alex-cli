@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alex-cli"
+version = "0.1.0"
+description = "Alex – structured Linux CLI assistant"
+requires-python = ">=3.10"
+dependencies = ["typer", "rich", "openai"]
+
+[project.scripts]
+alex = "alex.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["alex*"]
