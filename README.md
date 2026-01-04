@@ -15,15 +15,15 @@ Alex is a structured CLI assistant built for Debian-based systems. It doesn't ju
 
 ### The "Doctor" Check
 Keep your environment healthy. Alex checks everything from Python versions to shell hook status.
-![Alex Doctor](https://github.com/mrazeekk/alex-cli/docs/screenshots/doctor.png)
+![Alex Doctor](docs/screenshots/doctor.png)
 
 ### Safety First
 Alex identifies high-risk commands and forces a manual confirmation before execution.
-![Safety Guardrails](https://github.com/mrazeekk/alex-cli/docs/screenshots/safety.png)
+![Safety Guardrails](docs/screenshots/safety.png)
 
 ### Intelligent Service Diagnosis
 Diving deep into systemd units to explain why a service isn't behaving.
-![Service Diagnosis](https://github.com/mrazeekk/alex-cli/docs/screenshots/service.png)
+![Service Diagnosis](docs/screenshots/service.png)
 
 ## 🚀 Installation
 
