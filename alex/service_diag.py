@@ -64,21 +64,17 @@ def service_diagnose(
 
     ensure_key()
 
-    # 0) baseline probes (safe)
     base_cmds = [
         f"systemctl status {service} --no-pager --full",
         f"systemctl is-enabled {service}",
         f"systemctl is-active {service}",
-        # show where the unit file is, and key metadata
         f"systemctl show {service} -p Id -p Names -p LoadState -p ActiveState -p SubState -p Result -p ExecMainStatus -p ExecMainCode -p FragmentPath -p DropInPaths -p MainPID",
-        # last logs (current boot). if service doesn't exist, this is still useful.
         f"journalctl -u {service} -b --no-pager -n 200",
     ]
 
     results = _run_diag(base_cmds)
     baseline_text = _format_results(results)
 
-    # 1) iterative loop: model asks for more probes
     context = (
         "You are diagnosing a systemd service on Debian.\n"
         "Goal: Determine if the service exists and whether it is healthy.\n"
@@ -103,24 +99,21 @@ def service_diagnose(
 
         cmds = data.get("commands", [])
         if not cmds:
-            # model is done
             return
 
-        # run suggested diagnostic commands
         total = len(cmds)
         for idx, c in enumerate(cmds, start=1):
             cmd = (c.get("cmd") or "").strip()
             if not cmd:
                 continue
 
-            # force to SUPER_HIGH if blacklist hits (even though we asked for safe)
+            # force to SUPER_HIGH if blacklist
             bl = classify_blacklist(cmd)
             risk = c.get("risk", "low")
             if bl:
                 risk = "super_high"
 
             if not apply:
-                # if user didn't ask to apply, we only show plan
                 continue
 
             if risk == "super_high":
@@ -143,7 +136,6 @@ def service_diagnose(
             )
 
         if not apply:
-            # user just wanted the analysis plan, not execution
             return
 
         # feed back the new results and loop
@@ -153,5 +145,4 @@ def service_diagnose(
             "Continue diagnosis. If done, return commands=[] and put final answer in summary/notes.\n"
         )
 
-    # if we hit max rounds
     print_box("Reached max diagnostic rounds. If you want, run again with more rounds.", title="Alex")
