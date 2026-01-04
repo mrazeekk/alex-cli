@@ -12,8 +12,13 @@ from .errors import read_error_log_blocks, filter_error_blocks
 from .executor import run_command, classify_blacklist, clean_stderr
 from .config import ALEX_ERR_FILE_DEFAULT
 from .utils import ensure_key
+from .auth import prompt_and_store_key, delete_key_file, get_status, load_key_into_env_if_missing
+from .doctor import run_doctor
 from .user_config import ensure_config_file, open_in_editor, config_path, load_config
 from .service_diag import service_diagnose
+from .auth import prompt_and_store_key, delete_key_file, get_status, load_key_into_env_if_missing
+from .doctor import run_doctor
+
 
 
 console = Console()
@@ -26,6 +31,8 @@ def run(
     yes: bool = typer.Option(False, "--yes", "-y", help="Auto-confirm low/medium/high (still asks for super_high/blacklist)"),
     verbose: bool = typer.Option(False, "--verbose", help="Show full stdout/stderr even on success"),
 ):
+    """Ask Alex a question and get shell commands as response."""
+    
     ensure_key()
     cfg = load_config()
     if not verbose and cfg.verbose:
@@ -155,6 +162,8 @@ def error(
     since: Optional[str] = typer.Option(None, "--since", help="Only errors since date/time (YYYY-MM-DD or YYYY-MM-DD HH:MM[:SS])"),
     clear: bool = typer.Option(False, "--clear", help="Clear the error log and exit"),
 ):
+    """Analyze an error log with OpenAI to get suggestions."""
+
     if clear:
         open(fallback, "w").close()
         print_box("Error log cleared.", title="Alex")
@@ -222,6 +231,60 @@ def service(
     """Diagnose a systemd service (exists? running? why failing?)."""
     service_diagnose(name, apply=apply, yes=yes, max_rounds=rounds)
 
+
+
+@app.command()
+def auth(
+    show: bool = typer.Option(False, "--show", help="Show auth status (masked) and exit"),
+    clear: bool = typer.Option(False, "--clear", help="Delete stored key file (~/.config/alex/openai.env)"),
+):
+    """
+    Store OpenAI API key in user config so you don't need to export it in shell.
+    """
+    if clear:
+        removed = delete_key_file()
+        if removed:
+            print_box("Removed stored key file.", title="Alex")
+        else:
+            print_box("No stored key file found.", title="Alex")
+        return
+
+    if show:
+        st = get_status()
+        msg = (
+            f"Env set: {st.has_env}\n"
+            f"File set: {st.has_file}\n"
+            f"File: {st.file_path}\n"
+            f"Key: {st.masked_key}\n"
+        )
+        print_box(Text(msg), title="Alex")
+        return
+
+    path = prompt_and_store_key()
+    # load to env for current process too
+    load_key_into_env_if_missing()
+    print_box(f"Saved. Key file: {path}\nYou can now run: alex run ...", title="Alex")
+
+@app.command()
+def config(
+    show: bool = typer.Option(False, "--show", help="Print path to config file and exit"),
+):
+    """Open user config in $EDITOR (or nano)."""
+    path = ensure_config_file()
+    if show:
+        print_box(f"Config file: {path}", title="Alex")
+        return
+
+    rc = open_in_editor(path)
+    if rc != 0:
+        print_box(f"Editor exited with code {rc}\nConfig file: {path}", title="Alex")
+    else:
+        print_box(f"Saved.\nConfig file: {path}", title="Alex")
+
+@app.command()
+def doctor():
+    """Check installation and configuration sanity."""
+    raise SystemExit(run_doctor())
 
 def main():
     if len(sys.argv) == 1:
