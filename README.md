@@ -31,3 +31,31 @@ Diving deep into systemd units to explain why a service isn't behaving.
 sudo apt update && sudo apt install -y git && \
 sudo git clone [https://github.com/mrazeekk/alex-cli.git](https://github.com/mrazeekk/alex-cli.git) /opt/alex && \
 sudo /opt/alex/scripts/install.sh
+```
+After installation, restart your terminal or run source /etc/profile.d/alex-shell-hook.sh.
+
+## 🔑 Setting up OpenAI API
+To use the AI features, you need an OpenAI API key. Even a minimum $5 deposit is more than enough for long-term use.
+
+Get your Key: Go to platform.openai.com and create a new API key.
+
+Authorize Alex: Run:
+```bash
+alex auth
+```
+Alex will securely store it in ~/.config/alex/openai.env with restricted (600) permissions.
+
+## 🛠️ Usage Examples
+Explain Last Terminal Error
+Simply run "alex error" after any command fails. Alex pulls the context and tells you how to fix it.
+
+Ask for Help (No quotes needed!)
+```bash
+alex run show me the top 5 largest files in /var/log --apply
+```
+Alex suggests the safest command and helps you execute it after your approval.
+
+Don't be afraid of use "alex --help", "alex run --help"... And so on. It is properly explained.
+
+## ⚙️ Configuration
+You can change you settings by calling "alex config". You can change the language (English/Czech), AI model, or response verbosity.
