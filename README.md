@@ -5,16 +5,12 @@ Structured Linux CLI assistant (Debian-focused) with optional command execution,
 ## Install (Debian)
 
 ### 1) Get the code
-sudo apt update
+sudo apt update && sudo apt install -y git
 
-sudo apt install -y git python3-venv python3-pip
+sudo git clone https://github.com/mrazeekk/alex-cli.git /opt/alex
 
-git clone https://github.com/mrazeekk/alex-cli.git
+sudo /opt/alex/scripts/install.sh
 
-cd alex-cli
+alex doctor
 
-python3 -m venv .venv
-
-source .venv/bin/activate
-
-pip install -e .
+alex auth
