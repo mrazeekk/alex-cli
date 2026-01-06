@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 from rich.prompt import Confirm
@@ -48,6 +49,66 @@ def _run_diag(cmds: List[str]) -> List[CmdResult]:
         )
     return res
 
+def _list_service_unit_files() -> List[str]:
+    r = run_command("systemctl list-unit-files --type=service --no-legend --no-pager")
+    if r.returncode != 0:
+        return []
+    units: List[str] = []
+    for line in (r.stdout or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # format: "<unit> <state> <preset>"
+        unit = line.split(None, 1)[0]
+        units.append(unit)
+    return units
+
+
+def _resolve_service_name(name: str) -> Dict[str, Any]:
+    """
+    Returns dict:
+      { "resolved": str, "changed": bool, "suggestions": List[str] }
+    """
+    raw = (name or "").strip()
+    if not raw:
+        return {"resolved": raw, "changed": False, "suggestions": []}
+
+    units = _list_service_unit_files()
+    units_l = {u.lower(): u for u in units}
+
+    # 1) exact match (as entered)
+    if raw.lower() in units_l:
+        return {"resolved": units_l[raw.lower()], "changed": False, "suggestions": []}
+
+    # 2) try ".service"
+    if not raw.lower().endswith(".service"):
+        cand = raw + ".service"
+        if cand.lower() in units_l:
+            return {"resolved": units_l[cand.lower()], "changed": True, "suggestions": []}
+
+    # 3) fuzzy suggestions (strip ".service" for better matching)
+    bare_units = [u[:-8] if u.endswith(".service") else u for u in units]
+    # compare against raw without ".service"
+    raw_bare = raw[:-8] if raw.lower().endswith(".service") else raw
+
+    matches = difflib.get_close_matches(raw_bare, bare_units, n=5, cutoff=0.72)
+    suggestions = []
+    for m in matches:
+        # rebuild into ".service" form if exists
+        s = m + ".service"
+        if s.lower() in units_l:
+            suggestions.append(units_l[s.lower()])
+        else:
+            suggestions.append(m)
+
+    # if top match is strong enough, auto-resolve
+    if suggestions:
+        score = difflib.SequenceMatcher(a=raw_bare.lower(), b=(suggestions[0].replace(".service", "")).lower()).ratio()
+        if score >= 0.90 and suggestions[0].lower() in units_l:
+            return {"resolved": suggestions[0], "changed": True, "suggestions": suggestions}
+
+    return {"resolved": raw, "changed": False, "suggestions": suggestions}
+
 
 def service_diagnose(
     service: str,
@@ -63,6 +124,23 @@ def service_diagnose(
     """
 
     ensure_key()
+
+    orig = service
+    rsv = _resolve_service_name(service)
+    service = rsv["resolved"]
+
+    if rsv["suggestions"] and service == orig:
+        # nic jsme automaticky nevyřešili, ale máme návrhy
+        sug = "\n".join(f"• {s}" for s in rsv["suggestions"])
+        print_box(
+            Text(f"Service '{orig}' not found.\n\nDid you mean:\n{sug}\n", style="bold"),
+            title="Alex",
+        )
+        return
+
+    if service != orig:
+        print_box(f"Interpreting '{orig}' as '{service}'.", title="Alex")
+
 
     base_cmds = [
         f"systemctl status {service} --no-pager --full",

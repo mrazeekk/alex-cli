@@ -18,18 +18,24 @@ from .user_config import ensure_config_file, open_in_editor, config_path, load_c
 from .service_diag import service_diagnose
 from .auth import prompt_and_store_key, delete_key_file, get_status, load_key_into_env_if_missing
 from .doctor import run_doctor
+from .service_resolve import resolve_service_name
+
 
 
 
 console = Console()
-app = typer.Typer(add_completion=False)
+app = typer.Typer(
+    add_completion=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+
 
 @app.command()
 def run(
     query: List[str],
-    apply: bool = typer.Option(False, "--apply", help="Execute suggested commands"),
+    apply: bool = typer.Option(False, "--apply", "-a", help="Execute suggested commands"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Auto-confirm low/medium/high (still asks for super_high/blacklist)"),
-    verbose: bool = typer.Option(False, "--verbose", help="Show full stdout/stderr even on success"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show full stdout/stderr even on success"),
 ):
     """Ask Alex a question and get shell commands as response."""
     
@@ -39,6 +45,10 @@ def run(
         verbose = True
     if not yes and cfg.auto_yes:
         yes = True
+
+    # UX: if user says "-y/--yes", they clearly want to run it
+    if yes and not apply:
+        apply = True
 
     q = " ".join(query).strip()
     if not q:
@@ -154,13 +164,13 @@ def run(
 @app.command()
 def error(
     text: List[str] = typer.Argument(None),
-    cmd: Optional[str] = typer.Option(None, "--cmd", help="Original command you ran"),
-    fallback: str = typer.Option(ALEX_ERR_FILE_DEFAULT, "--fallback", help="Fallback error file"),
+    cmd: Optional[str] = typer.Option(None, "--cmd", "-C", help="Original command you ran"),
+    fallback: str = typer.Option(ALEX_ERR_FILE_DEFAULT, "--fallback", "-f", help="Fallback error file"),
     last: int = typer.Option(1, "--last", "-n", help="How many last errors to include"),
-    show: bool = typer.Option(False, "--show", help="Only show the selected error block(s) without analysis"),
-    grep: Optional[str] = typer.Option(None, "--grep", help="Filter errors containing this text (case-insensitive)"),
-    since: Optional[str] = typer.Option(None, "--since", help="Only errors since date/time (YYYY-MM-DD or YYYY-MM-DD HH:MM[:SS])"),
-    clear: bool = typer.Option(False, "--clear", help="Clear the error log and exit"),
+    show: bool = typer.Option(False, "--show", "-s", help="Only show the selected error block(s) without analysis"),
+    grep: Optional[str] = typer.Option(None, "--grep", "-g", help="Filter errors containing this text (case-insensitive)"),
+    since: Optional[str] = typer.Option(None, "--since", "-S", help="Only errors since date/time (YYYY-MM-DD or YYYY-MM-DD HH:MM[:SS])"),
+    clear: bool = typer.Option(False, "--clear", "-c", help="Clear the error log and exit"),
 ):
     """Analyze an error log with OpenAI to get suggestions."""
 
@@ -229,6 +239,27 @@ def service(
     rounds: int = typer.Option(3, "--rounds", help="How many diagnostic rounds max"),
 ):
     """Diagnose a systemd service (exists? running? why failing?)."""
+
+    chosen, suggestions = resolve_service_name(name)
+
+    # pokud unit neexistuje, ale máme dobrý match, rovnou ho zkusíme
+    if suggestions and chosen != (name if name.endswith(".service") else name + ".service"):
+        print_box(
+            f"Service '{name}' not found.\n"
+            f"Trying: {chosen}",
+            title="Alex",
+        )
+
+        if False:
+            if not Confirm.ask(f"Continue with {chosen}?", default=True):
+                # když user nechce, tak alespoň vypiš návrhy
+                lines = "\n".join(f"• {s}" for s in suggestions[:5])
+                print_box(f"Did you mean:\n{lines}", title="Alex")
+                raise SystemExit(1)
+
+        name = chosen
+
+
     service_diagnose(name, apply=apply, yes=yes, max_rounds=rounds)
 
 

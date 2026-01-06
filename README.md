@@ -1,7 +1,7 @@
 # 🤖 Alex CLI (v0.2.0)
 > **Your intelligent Debian assistant that understands your terminal, monitors for errors, and keeps your system safe.**
 
-Alex is a structured CLI assistant built for Debian-based systems. It doesn't just run commands—it understands your environment, captures failed execution details in real-time via shell hooks, and provides AI-powered diagnostics.
+Alex (her) is a structured CLI assistant built for Debian-based systems. It doesn't just run commands—it understands your environment, captures failed execution details in real-time via shell hooks, and provides AI-powered diagnostics.
 
 ## ✨ Key Features
 
@@ -28,7 +28,7 @@ Diving deep into systemd units to explain why a service isn't behaving.
 ## 🚀 Installation
 
 ```bash
-sudo apt update && sudo apt install -y git && \
+sudo apt update && sudo apt install -y git sudo && \
 sudo git clone https://github.com/mrazeekk/alex-cli.git /opt/alex && \
 sudo /opt/alex/scripts/install.sh
 ```

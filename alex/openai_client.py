@@ -39,6 +39,12 @@ def call_responses_structured(prompt: str, intent: str) -> Dict[str, Any]:
         "Do not wrap commands in quotes in checks/notes.\n"
         "Use commands[] for actual shell commands.\n"
         "Whenever checking version, prefer: command -v <bin> && <bin> --version.\n"
+        "If the user asks to install something, prefer checking the Debian package name first:\n"
+        "  - use: apt-cache search <name> | head\n"
+        "  - and/or: apt-cache policy <pkg>\n"
+        "Only then propose apt install.\n"
+        "If apt says 'Unable to locate package', suggest likely correct package names (e.g., stunnel -> stunnel4).\n"
+
     )
 
     user_input = (
