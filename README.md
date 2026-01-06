@@ -1,7 +1,7 @@
 # 🤖 Alex CLI (v0.2.0)
 > **Your intelligent Debian assistant that understands your terminal, monitors for errors, and keeps your system safe.**
 
-Alex (her) is a structured CLI assistant built for Debian-based systems. It doesn't just run commands—it understands your environment, captures failed execution details in real-time via shell hooks, and provides AI-powered diagnostics.
+Alex (she) is a structured CLI assistant built for Debian-based systems. It doesn't just run commands—it understands your environment, captures failed execution details in real-time via shell hooks, and provides AI-powered diagnostics.
 
 ## ✨ Key Features
 
