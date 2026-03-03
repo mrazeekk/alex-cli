@@ -12,12 +12,10 @@ need_root() {
   fi
 }
 
-# Tohle teď voláme hned na začátku bez ptaní
 install_system_deps() {
   echo "[*] Ensuring all system dependencies are installed..."
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -y
-  # Instalujeme všechno natvrdo - git, python, venv i pip
   apt-get install -y \
     git \
     sudo \
@@ -44,7 +42,6 @@ clone_or_update() {
 
 setup_venv() {
   echo "[*] Creating fresh venv in $INSTALL_DIR/.venv"
-  # Smažeme starý venv, pokud tam zbyl nějaký nefunkční pokus
   rm -rf "$INSTALL_DIR/.venv"
   
   "$PYTHON_BIN" -m venv "$INSTALL_DIR/.venv"
@@ -65,25 +62,29 @@ WRAP
 install_shell_hook() {
   if [ -f "$INSTALL_DIR/scripts/alex-shell-hook.sh" ]; then
     echo "[*] Installing shell hook to /etc/profile.d/alex-shell-hook.sh"
+    # Oprava: Kopírujeme a nastavujeme práva tak, aby byl soubor čitelný pro všechny, 
+    # ale není potřeba aby byl "executable", protože se bude sourcovat.
     cp -f "$INSTALL_DIR/scripts/alex-shell-hook.sh" /etc/profile.d/alex-shell-hook.sh
     chmod 644 /etc/profile.d/alex-shell-hook.sh
+  else
+    echo "[!] Warning: scripts/alex-shell-hook.sh not found in repo."
   fi
 }
 
 final_message() {
   echo
-  echo "[*] Done."
-  echo "Next:"
-  echo "  1) Open a NEW shell (or: source /etc/profile.d/alex-shell-hook.sh)"
-  echo "  2) Run: alex doctor"
-  echo "  3) Run: alex auth"
+  echo "--- INSTALLATION COMPLETE ---"
+  echo "[*] Shell hook installed to /etc/profile.d/alex-shell-hook.sh"
+  echo "[*] To apply changes IMMEDIATELY in this terminal, run:"
+  echo "    source /etc/profile.d/alex-shell-hook.sh"
   echo
+  echo "[*] Otherwise, just open a new terminal window."
+  echo "[*] Then run: alex doctor"
+  echo "-----------------------------"
 }
 
 main() {
   need_root
-
-  # Žádné podmínky, prostě to tam nasypeme
   install_system_deps
   clone_or_update
   setup_venv
@@ -91,6 +92,7 @@ main() {
   install_shell_hook
 
   echo "[*] Running: alex doctor"
+  # Spouštíme přes plnou cestu k wrapperu
   /usr/local/bin/alex doctor || true
 
   final_message
