@@ -12,19 +12,21 @@ need_root() {
   fi
 }
 
-have_cmd() { command -v "$1" >/dev/null 2>&1; }
-
-# Nová kontrola, jestli python skutečně umí vytvořit venv
-can_venv() {
-  "$PYTHON_BIN" -m venv --help >/dev/null 2>&1
-}
-
-apt_install_deps() {
-  echo "[*] Updating apt and installing dependencies..."
+# Tohle teď voláme hned na začátku bez ptaní
+install_system_deps() {
+  echo "[*] Ensuring all system dependencies are installed..."
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -y
-  # Instalujeme python3-venv explicitně, protože bez něj to na Debianu/Ubuntu nejde
-  apt-get install -y git sudo "$PYTHON_BIN" "${PYTHON_BIN}-venv" "${PYTHON_BIN}-pip" ca-certificates curl
+  # Instalujeme všechno natvrdo - git, python, venv i pip
+  apt-get install -y \
+    git \
+    sudo \
+    "$PYTHON_BIN" \
+    "${PYTHON_BIN}-venv" \
+    "${PYTHON_BIN}-pip" \
+    ca-certificates \
+    curl \
+    build-essential
 }
 
 clone_or_update() {
@@ -35,15 +37,14 @@ clone_or_update() {
     git -C "$INSTALL_DIR" pull --ff-only
   else
     echo "[*] Cloning repo to $INSTALL_DIR"
-    # Pokud adresář existuje ale není to git (např. prázdný po selhání), smažeme ho
     [ -d "$INSTALL_DIR" ] && rm -rf "$INSTALL_DIR"
     git clone "$REPO_URL" "$INSTALL_DIR"
   fi
 }
 
 setup_venv() {
-  echo "[*] Creating venv in $INSTALL_DIR/.venv"
-  # Odstraníme starý pokus o venv, pokud existuje a je rozbitý
+  echo "[*] Creating fresh venv in $INSTALL_DIR/.venv"
+  # Smažeme starý venv, pokud tam zbyl nějaký nefunkční pokus
   rm -rf "$INSTALL_DIR/.venv"
   
   "$PYTHON_BIN" -m venv "$INSTALL_DIR/.venv"
@@ -75,26 +76,21 @@ final_message() {
   echo "Next:"
   echo "  1) Open a NEW shell (or: source /etc/profile.d/alex-shell-hook.sh)"
   echo "  2) Run: alex doctor"
-  echo "  3) Run: alex auth    (to store OPENAI_API_KEY securely)"
+  echo "  3) Run: alex auth"
   echo
 }
 
 main() {
   need_root
 
-  # Změna logiky: instaluj dependencies, pokud chybí git NEBO pokud python neumí venv
-  if ! have_cmd git || ! have_cmd "$PYTHON_BIN" || ! can_venv; then
-    apt_install_deps
-  fi
-
+  # Žádné podmínky, prostě to tam nasypeme
+  install_system_deps
   clone_or_update
   setup_venv
   install_wrapper
   install_shell_hook
 
-  echo
   echo "[*] Running: alex doctor"
-  # Spouštíme přes wrapper, který jsme právě vytvořili
   /usr/local/bin/alex doctor || true
 
   final_message
