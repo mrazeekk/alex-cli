@@ -62,8 +62,6 @@ WRAP
 install_shell_hook() {
   if [ -f "$INSTALL_DIR/scripts/alex-shell-hook.sh" ]; then
     echo "[*] Installing shell hook to /etc/profile.d/alex-shell-hook.sh"
-    # Oprava: Kopírujeme a nastavujeme práva tak, aby byl soubor čitelný pro všechny, 
-    # ale není potřeba aby byl "executable", protože se bude sourcovat.
     cp -f "$INSTALL_DIR/scripts/alex-shell-hook.sh" /etc/profile.d/alex-shell-hook.sh
     chmod 644 /etc/profile.d/alex-shell-hook.sh
   else
@@ -92,7 +90,6 @@ main() {
   install_shell_hook
 
   echo "[*] Running: alex doctor"
-  # Spouštíme přes plnou cestu k wrapperu
   /usr/local/bin/alex doctor || true
 
   final_message
