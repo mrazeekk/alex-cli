@@ -57,18 +57,15 @@ def _overall(checks: List[Check]) -> str:
 def run_doctor() -> int:
     checks: List[Check] = []
 
-    # Python
     py = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro} ({sys.executable})"
     checks.append(Check("Python", py, "OK"))
 
-    # alex in PATH
     alex_path = shutil.which("alex") or ""
     if alex_path:
         checks.append(Check("alex in PATH", alex_path, "OK"))
     else:
         checks.append(Check("alex in PATH", "missing", "FAIL", "Reinstall wrapper to /usr/local/bin/alex"))
 
-    # Config file (user config.toml)
     cfg = config_path()
     checks.append(
         Check(
@@ -79,13 +76,11 @@ def run_doctor() -> int:
         )
     )
 
-    # OpenAI key status
     st = get_status()
     kf = key_path()
     kf_exists = kf.exists()
     mode = _file_mode(kf) if kf_exists else "?"
 
-    # key file check
     if kf_exists:
         if mode in ("0o600", "0o400"):
             checks.append(Check("Key file", f"{kf} (mode={mode})", "OK"))
@@ -94,26 +89,22 @@ def run_doctor() -> int:
     else:
         checks.append(Check("Key file", f"{kf} (exists=False)", "WARN", "Run: alex auth"))
 
-    # env var check
     if st.has_env:
         checks.append(Check("OPENAI_API_KEY (env)", "present", "OK", f"Key: {st.masked_key}"))
     else:
         checks.append(Check("OPENAI_API_KEY (env)", "missing", "WARN", "Optional (alex can read from key file)"))
 
-    # final key availability (env OR file)
     if st.has_env or st.has_file:
         checks.append(Check("OpenAI key usable", "yes", "OK", f"Key: {st.masked_key}"))
     else:
         checks.append(Check("OpenAI key usable", "no", "FAIL", "Run: alex auth"))
 
-    # tools
     for tool in ("git", "systemctl", "journalctl"):
         if shutil.which(tool):
             checks.append(Check(tool, "ok", "OK"))
         else:
             checks.append(Check(tool, "missing", "WARN"))
 
-    # shell hook
     hook = Path("/etc/profile.d/alex-shell-hook.sh")
     checks.append(
         Check(
@@ -124,7 +115,6 @@ def run_doctor() -> int:
         )
     )
 
-    # Render
     t = Table(show_header=True, header_style="bold")
     t.add_column("Check", overflow="fold")
     t.add_column("Status", width=8)
