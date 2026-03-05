@@ -60,4 +60,4 @@ Don't be afraid of use "alex --help", "alex run --help"... And so on. It is prop
 ## ⚙️ Configuration
 You can change you settings by calling "alex config". You can change the language (English/Czech), AI model, or response verbosity.
 
-### The structure of this project was modified using Gemini AI.
+### The architecture and functional logic of the solution are the author's work. The Gemini (AI) model was used during development to review the code syntax, optimize error conditions, and ensure script stability.
