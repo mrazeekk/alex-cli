@@ -16,7 +16,6 @@ def call_responses_structured(prompt: str, intent: str) -> Dict[str, Any]:
 
     cfg = load_config()
 
-    # model: config > env > default
     model = cfg.model or ALEX_DEFAULT_MODEL
 
     language_line = "Answer in Czech." if (cfg.language or "").lower().startswith("cs") else "Answer in English."
@@ -90,7 +89,6 @@ def call_service_fix_plan(diag: Dict[str, Any]) -> Dict[str, Any]:
     """
     client = OpenAI()
 
-    # Strict schema for a fix plan
     schema = {
         "name": "alex_service_fix_plan",
         "strict": True,
