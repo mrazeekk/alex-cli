@@ -59,3 +59,5 @@ Don't be afraid of use "alex --help", "alex run --help"... And so on. It is prop
 
 ## ⚙️ Configuration
 You can change you settings by calling "alex config". You can change the language (English/Czech), AI model, or response verbosity.
+
+## The structure of this project was modified using Gemini AI.
