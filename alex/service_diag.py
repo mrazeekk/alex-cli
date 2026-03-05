@@ -58,7 +58,6 @@ def _list_service_unit_files() -> List[str]:
         line = line.strip()
         if not line:
             continue
-        # format: "<unit> <state> <preset>"
         unit = line.split(None, 1)[0]
         units.append(unit)
     return units
@@ -76,32 +75,26 @@ def _resolve_service_name(name: str) -> Dict[str, Any]:
     units = _list_service_unit_files()
     units_l = {u.lower(): u for u in units}
 
-    # 1) exact match (as entered)
     if raw.lower() in units_l:
         return {"resolved": units_l[raw.lower()], "changed": False, "suggestions": []}
 
-    # 2) try ".service"
     if not raw.lower().endswith(".service"):
         cand = raw + ".service"
         if cand.lower() in units_l:
             return {"resolved": units_l[cand.lower()], "changed": True, "suggestions": []}
 
-    # 3) fuzzy suggestions (strip ".service" for better matching)
     bare_units = [u[:-8] if u.endswith(".service") else u for u in units]
-    # compare against raw without ".service"
     raw_bare = raw[:-8] if raw.lower().endswith(".service") else raw
 
     matches = difflib.get_close_matches(raw_bare, bare_units, n=5, cutoff=0.72)
     suggestions = []
     for m in matches:
-        # rebuild into ".service" form if exists
         s = m + ".service"
         if s.lower() in units_l:
             suggestions.append(units_l[s.lower()])
         else:
             suggestions.append(m)
 
-    # if top match is strong enough, auto-resolve
     if suggestions:
         score = difflib.SequenceMatcher(a=raw_bare.lower(), b=(suggestions[0].replace(".service", "")).lower()).ratio()
         if score >= 0.90 and suggestions[0].lower() in units_l:
@@ -130,7 +123,6 @@ def service_diagnose(
     service = rsv["resolved"]
 
     if rsv["suggestions"] and service == orig:
-        # nic jsme automaticky nevyřešili, ale máme návrhy
         sug = "\n".join(f"• {s}" for s in rsv["suggestions"])
         print_box(
             Text(f"Service '{orig}' not found.\n\nDid you mean:\n{sug}\n", style="bold"),
@@ -185,7 +177,6 @@ def service_diagnose(
             if not cmd:
                 continue
 
-            # force to SUPER_HIGH if blacklist
             bl = classify_blacklist(cmd)
             risk = c.get("risk", "low")
             if bl:
@@ -216,7 +207,6 @@ def service_diagnose(
         if not apply:
             return
 
-        # feed back the new results and loop
         prompt = (
             f"SERVICE: {service}\n\n"
             f"ALL RESULTS SO FAR:\n{_format_results(results)}\n\n"
