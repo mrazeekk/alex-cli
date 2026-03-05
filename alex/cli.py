@@ -45,8 +45,7 @@ def run(
         verbose = True
     if not yes and cfg.auto_yes:
         yes = True
-
-    # UX: if user says "-y/--yes", they clearly want to run it
+        
     if yes and not apply:
         apply = True
 
